@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="TES Atlas">
+  <title>The Elder Scrolls: Atlas &amp; Lore</title>
+  <style>
+    :root{--bg:#0d0b09;--panel:#181410;--light:#241e18;--gold:#d4af37;--dim:#8c6d23;--text:#efe9dc;--muted:#a89f91;--border:#382e22}
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Georgia,serif;background:var(--bg);color:var(--text);line-height:1.5;padding-top:env(safe-area-inset-top);padding-bottom:calc(32px + env(safe-area-inset-bottom));min-height:100dvh}
+    header{text-align:center;padding:14px 12px 10px;border-bottom:1px solid var(--border);background:linear-gradient(180deg,#1d1712 0%,#0d0b09 100%)}
+    header h1{font-size:1.3rem;letter-spacing:2px;color:var(--gold);text-transform:uppercase}
+    header p{font-size:.78rem;color:var(--muted);margin-top:2px}
+    .tabs{display:flex;gap:5px;padding:8px 10px;background:var(--panel);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:20}
+    .tab-btn{flex:1;background:var(--light);color:var(--text);border:1px solid var(--border);padding:9px 4px;border-radius:7px;font-size:.76rem;font-weight:700;cursor:pointer}
+    .tab-btn.active{background:var(--gold);color:#120e0a;border-color:var(--gold)}
+    .section{display:none;padding:12px;max-width:840px;margin:0 auto}
+    .section.active{display:block}
+    .hint{text-align:center;font-size:.78rem;color:var(--muted);margin-bottom:8px}
+    .map-box{position:relative;width:100%;height:54dvh;min-height:350px;max-height:500px;background:#1a2630;border:2px solid var(--dim);border-radius:12px;overflow:hidden;touch-action:none;box-shadow:inset 0 0 35px rgba(0,0,0,.85)}
+    .zoom-ui{position:absolute;top:10px;right:10px;display:flex;flex-direction:column;gap:7px;z-index:10}
+    .z-btn{width:38px;height:38px;background:rgba(24,20,16,.92);color:var(--gold);border:1px solid var(--dim);border-radius:8px;font-size:1.15rem;font-weight:700;cursor:pointer}
+    svg#map{width:100%;height:100%;display:block}
+    .prov{stroke:#2b2116;stroke-width:1.4;cursor:pointer;transition:filter .2s}
+    .prov.selected{stroke:#fff3c4;stroke-width:2.4;filter:brightness(1.22)}
+    .lbl{font-family:Georgia,serif;font-size:8.8px;font-weight:700;fill:#fff8e7;text-anchor:middle;letter-spacing:.8px;pointer-events:none;paint-order:stroke;stroke:#1a130c;stroke-width:2.2px}
+    .city{font-family:Georgia,serif;font-size:6.5px;fill:#ffe8a3;text-anchor:middle;pointer-events:none;paint-order:stroke;stroke:#140e08;stroke-width:1.8px}
+    .sea{font-family:Georgia,serif;font-size:8px;font-style:italic;fill:#7fa4bd;opacity:.85;text-anchor:middle;letter-spacing:1.4px;pointer-events:none}
+    .bar{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:10px 0}
+    .pill-btn{background:var(--panel);color:var(--gold);border:1px solid var(--border);padding:7px 10px;border-radius:6px;font-size:.76rem;font-weight:600;cursor:pointer}
+    .pill-btn.active{background:var(--gold);color:#120e0a;border-color:var(--gold)}
+    .card{margin-top:10px;background:var(--panel);border:1px solid var(--dim);border-radius:10px;padding:14px}
+    .card h2{color:var(--gold);font-size:1.1rem;margin-bottom:3px}
+    .meta{font-size:.78rem;color:var(--muted);margin-bottom:8px}
+    .card p{font-size:.88rem;color:var(--text)}
+    .item{background:var(--panel);border-left:3px solid var(--gold);padding:11px 13px;margin-bottom:9px;border-radius:0 8px 8px 0}
+    .badge{display:inline-block;background:var(--light);color:var(--gold);font-size:.7rem;font-weight:700;padding:2px 7px;border-radius:4px;margin-bottom:4px;margin-right:4px}
+    .item h3{font-size:.98rem;color:#fff}
+    .item p{font-size:.84rem;color:#d6cfc2;margin-top:4px}
+    .sub-title{font-size:.85rem;text-transform:uppercase;letter-spacing:1.2px;color:var(--gold);margin:14px 0 8px;border-bottom:1px solid var(--border);padding-bottom:4px}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>The Elder Scrolls</h1>
+    <p>Imperial Cartography, Lore &amp; Character Compendium</p>
+  </header>
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="map-sec">Map</button>
+    <button class="tab-btn" data-tab="char-sec">Races &amp; Classes</button>
+    <button class="tab-btn" data-tab="era-sec">Timeline</button>
+    <button class="tab-btn" data-tab="game-sec">Games</button>
+  </nav>
+  <section id="map-sec" class="section active">
+    <p class="hint">Drag to pan, + / − to zoom, tap any province, peak, or realm</p>
+    <div class="map-box" id="map-box">
+      <div class="zoom-ui">
+        <button class="z-btn" id="btn-zin">+</button>
+        <button class="z-btn" id="btn-zout">−</button>
+        <button class="z-btn" id="btn-zreset">↺</button>
+      </div>
+      <svg id="map" viewBox="0 0 800 560">
+        <defs>
+          <radialGradient id="oceanGrad" cx="50%" cy="48%" r="60%">
+            <stop offset="0%" stop-color="#263c4d"/>
+            <stop offset="65%" stop-color="#172733"/>
+            <stop offset="100%" stop-color="#0d171f"/>
+          </radialGradient>
+          <filter id="landShadow" x="-10%" y="-10%" width="120%" height="120%">
+            <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#05080a" flood-opacity="0.8"/>
+          </filter>
+        </defs>
+        <g id="vp">
+          <rect x="-200" y="-200" width="1200" height="960" fill="url(#oceanGrad)"/>
+          <g stroke="rgba(212,175,55,0.12)" stroke-width="0.8" pointer-events="none">
+            <line x1="0" y1="140" x2="800" y2="140"/><line x1="0" y1="280" x2="800" y2="280"/><line x1="0" y1="420" x2="800" y2="420"/>
+            <line x1="200" y1="0" x2="200" y2="560"/><line x1="400" y1="0" x2="400" y2="560"/><line x1="600" y1="0" x2="600" y2="560"/>
+          </g>
+          <g transform="translate(725,68)" opacity="0.85" pointer-events="none">
+            <circle r="26" fill="none" stroke="#d4af37" stroke-width="1"/>
+            <circle r="21" fill="none" stroke="#d4af37" stroke-dasharray="2,2"/>
+            <polygon points="0,-24 5,-5 24,0 5,5 0,24 -5,5 -24,0 -5,-5" fill="#d4af37"/>
+            <text x="0" y="-28" fill="#d4af37" font-size="10" font-family="Georgia,serif" font-weight="bold" text-anchor="middle">N</text>
+          </g>
+          <text x="360" y="36" class="sea">SEA OF GHOSTS</text>
+          <text x="82" y="295" class="sea">ABECEAN SEA</text>
+          <text x="455" y="445" class="sea">TOPAL BAY</text>
+          <text x="665" y="280" class="sea">PADOMAIC OCEAN</text>
+          <g filter="url(#landShadow)">
+            <path class="prov" data-lore="highrock" fill="#5b7365" d="M 108,136 L 132,110 L 168,94 L 218,86 L 244,112 L 222,138 L 195,148 L 185,175 L 158,178 L 146,154 L 122,166 L 102,152 Z"/>
+            <path class="prov" data-lore="hammerfell" fill="#a87948" d="M 145,182 L 192,178 L 222,142 L 265,155 L 288,188 L 272,235 L 235,252 L 195,248 L 162,262 L 142,238 L 152,208 Z"/>
+            <circle class="prov" data-lore="hammerfell" fill="#a87948" cx="152" cy="274" r="7"/>
+            <path class="prov" data-lore="skyrim" fill="#6b7c85" d="M 228,88 L 285,72 L 355,66 L 425,76 L 455,115 L 442,168 L 395,182 L 335,178 L 288,185 L 265,152 L 225,136 Z"/>
+            <path class="prov" data-lore="skyrim" fill="#7a8c96" d="M 468,52 L 488,48 L 496,68 L 482,82 L 465,74 Z"/>
+            <path class="prov" data-lore="morrowind" fill="#78535c" d="M 456,112 L 515,96 L 575,118 L 605,165 L 592,225 L 555,258 L 512,252 L 492,215 L 465,188 L 444,166 Z"/>
+            <path class="prov" data-lore="morrowind" fill="#8c606a" d="M 504,120 L 544,114 L 564,142 L 552,174 L 504,165 Z"/>
+            <path class="prov" data-lore="cyrodiil" fill="#5e784c" d="M 288,186 L 335,179 L 395,183 L 443,169 L 465,190 L 490,220 L 478,285 L 425,310 L 365,305 L 315,280 L 274,238 Z"/>
+            <path class="prov" data-lore="blackmarsh" fill="#3f614d" d="M 491,218 L 512,253 L 556,259 L 585,315 L 565,385 L 495,380 L 472,330 L 479,286 Z"/>
+            <path class="prov" data-lore="elsweyr" fill="#b38e4e" d="M 365,306 L 425,311 L 468,290 L 462,388 L 395,395 L 360,355 Z"/>
+            <path class="prov" data-lore="valenwood" fill="#436e38" d="M 272,265 L 315,281 L 364,307 L 359,360 L 342,415 L 275,405 L 252,340 Z"/>
+            <path class="prov" data-lore="summerset" fill="#9c8744" d="M 105,365 L 175,350 L 195,435 L 130,455 L 95,415 Z"/>
+            <path class="prov" data-lore="summerset" fill="#9c8744" d="M 192,345 L 222,340 L 228,385 L 198,390 Z"/>
+          </g>
+          <g pointer-events="none">
+            <path d="M 382,222 L 396,250 L 418,278 L 434,310 M 272,118 L 315,112 L 348,96 M 408,108 L 415,142" fill="none" stroke="#2d6a8a" stroke-width="2" stroke-linecap="round"/>
+            <ellipse cx="382" cy="222" rx="7" ry="5" fill="#2d6a8a"/>
+            <path d="M 285,175 L 295,162 L 305,175 M 312,173 L 322,160 L 332,173 M 342,172 L 352,159 L 362,172 M 374,173 L 384,160 L 394,173 M 404,174 L 414,161 L 424,174 M 442,124 L 451,111 L 460,124 M 445,148 L 454,135 L 463,148 M 235,145 L 244,133 L 253,145 M 340,140 L 352,122 L 364,140" fill="none" stroke="#e6dec8" stroke-opacity="0.65" stroke-width="1.5" stroke-linecap="round"/>
+          </g>
+          <polygon class="prov" data-lore="redmountain" points="532,128 522,148 542,148" fill="#b84a39" stroke="#ff9e7d" stroke-width="1.2"/>
+          <text x="532" y="157" class="city" style="fill:#ffc2ad">Red Mountain</text>
+          <text x="168" y="130" class="lbl">HIGH ROCK</text>
+          <text x="215" y="210" class="lbl">HAMMERFELL</text>
+          <text x="350" y="114" class="lbl">SKYRIM</text>
+          <text x="532" y="196" class="lbl">MORROWIND</text>
+          <text x="385" y="254" class="lbl">CYRODIIL</text>
+          <text x="528" y="325" class="lbl">BLACK MARSH</text>
+          <text x="415" y="355" class="lbl">ELSWEYR</text>
+          <text x="310" y="355" class="lbl">VALENWOOD</text>
+          <text x="148" y="405" class="lbl">SUMMERSET</text>
+          <g pointer-events="none">
+            <circle cx="382" cy="222" r="3.2" fill="#d4af37" stroke="#000"/><text x="382" y="213" class="city" style="font-weight:700">Imperial City</text>
+            <circle cx="294" cy="248" r="2.2" fill="#d4af37"/><text x="294" y="242" class="city">Anvil</text>
+            <circle cx="445" cy="205" r="2.2" fill="#d4af37"/><text x="445" y="199" class="city">Cheydinhal</text>
+            <circle cx="288" cy="84" r="2.5" fill="#d4af37"/><text x="288" y="77" class="city">Solitude</text>
+            <circle cx="348" cy="134" r="2.3" fill="#d4af37"/><text x="348" y="146" class="city">Whiterun</text>
+            <circle cx="412" cy="104" r="2.2" fill="#d4af37"/><text x="412" y="98" class="city">Windhelm</text>
+            <circle cx="122" cy="148" r="2.5" fill="#d4af37"/><text x="122" y="142" class="city">Daggerfall</text>
+            <circle cx="182" cy="156" r="2.2" fill="#d4af37"/><text x="182" y="166" class="city">Wayrest</text>
+            <circle cx="176" cy="242" r="2.5" fill="#d4af37"/><text x="176" y="236" class="city">Sentinel</text>
+            <circle cx="520" cy="228" r="2.5" fill="#d4af37"/><text x="520" y="222" class="city">Mournhold</text>
+            <circle cx="534" cy="170" r="2.2" fill="#d4af37"/><text x="534" y="180" class="city">Vivec</text>
+            <circle cx="525" cy="355" r="2.5" fill="#d4af37"/><text x="525" y="349" class="city">Lilmoth</text>
+            <circle cx="410" cy="378" r="2.5" fill="#d4af37"/><text x="410" y="372" class="city">Torval</text>
+            <circle cx="305" cy="382" r="2.5" fill="#d4af37"/><text x="305" y="376" class="city">Elden Root</text>
+            <circle cx="132" cy="418" r="2.5" fill="#d4af37"/><text x="132" y="412" class="city">Alinor</text>
+          </g>
+        </g>
+      </svg>
+    </div>
+    <div class="bar">
+      <button class="pill-btn" data-lore="akavir">Akavir</button>
+      <button class="pill-btn" data-lore="atmora">Atmora</button>
+      <button class="pill-btn" data-lore="yokuda">Yokuda</button>
+      <button class="pill-btn" data-lore="aldmeris">Aldmeris</button>
+      <button class="pill-btn" data-lore="oblivion">Oblivion</button>
+      <button class="pill-btn" data-lore="aetherius">Aetherius</button>
+    </div>
+    <div class="card">
+      <h2 id="l-title">Tamriel</h2>
+      <div class="meta" id="l-meta">The Starry Heart of Nirn • 9 Provinces</div>
+      <p id="l-desc">Tap any province or city region on the map above, or select an outer continent/plane below to inspect its people, capital, and history.</p>
+    </div>
+  </section>
+  <section id="char-sec" class="section">
+    <h3 class="sub-title">Playable Races of Tamriel</h3>
+    <div class="bar" id="race-bar"></div>
+    <div class="card" id="race-card">
+      <h2 id="r-title">Altmer (High Elf)</h2>
+      <div class="meta" id="r-meta">Homeland: Summerset Isles • Archetype: Pure Mage</div>
+      <p id="r-desc">Passives: +50 Magicka &amp; faster Magicka regeneration. Power: Highborn (rapidly restores Magicka). Favored Skills: Illusion, Destruction, Conjuration, Alteration, Restoration, Enchanting.</p>
+    </div>
+    <h3 class="sub-title">Classic Character Classes</h3>
+    <div class="bar" id="class-filters">
+      <button class="pill-btn active" data-spec="all">All Classes</button>
+      <button class="pill-btn" data-spec="Combat">Combat</button>
+      <button class="pill-btn" data-spec="Magic">Magic</button>
+      <button class="pill-btn" data-spec="Stealth">Stealth</button>
+    </div>
+    <div id="class-list"></div>
+  </section>
+  <section id="era-sec" class="section">
+    <div class="bar" id="era-filters">
+      <button class="pill-btn active" data-era="all">All Eras</button>
+      <button class="pill-btn" data-era="Dawn">Dawn / Merethic</button>
+      <button class="pill-btn" data-era="1E">1st Era</button>
+      <button class="pill-btn" data-era="2E">2nd Era</button>
+      <button class="pill-btn" data-era="3E">3rd Era</button>
+      <button class="pill-btn" data-era="4E">4th Era</button>
+    </div>
+    <div id="timeline-list"></div>
+  </section>
+  <section id="game-sec" class="section"><div id="game-list"></div></section>
+  <script>
+    (function(){
+      const LORE={highrock:{title:"High Rock",meta:"People: Bretons & Orcs • Capital: Daggerfall",desc:"A fragmented feudal province of knightly orders, rugged hills, and elven-human ancestry. Home to the Adamantine Tower on the Isle of Balfiera, the oldest structure in Tamriel."},hammerfell:{title:"Hammerfell",meta:"People: Redguards • Capital: Sentinel",desc:"An arid land of vast deserts and coastal trade cities settled by warrior refugees from sunken Yokuda. Famous for resisting the Aldmeri Dominion after the Great War."},skyrim:{title:"Skyrim",meta:"People: Nords • Capital: Solitude",desc:"The frozen northern homeland of the Nords, towering mountains, and the Throat of the World. Birthplace of the Thu'um (Voice) and the Dragonborn prophecy."},morrowind:{title:"Morrowind",meta:"People: Dunmer (Dark Elves) • Capital: Mournhold",desc:"A volcanic land shaped by Ashlands, giant mushrooms, Great Houses, and the Tribunal living gods until the Red Year devastated Vvardenfell."},redmountain:{title:"Red Mountain",meta:"Location: Vvardenfell, Morrowind",desc:"The largest volcano in Tamriel, formed where the Heart of Lorkhan fell to Nirn. Site of the War of the First Council and the disappearance of the Dwemer."},cyrodiil:{title:"Cyrodiil",meta:"People: Imperials • Capital: Imperial City",desc:"The central heartland of Tamriel and seat of three human Empires. Dominated by the Nibenay Valley, Colovian Highlands, and the White-Gold Tower."},blackmarsh:{title:"Black Marsh (Argonia)",meta:"People: Argonians • Capital: Lilmoth",desc:"An impenetrable, disease-ridden swamp guided by the sentient Hist trees. Never fully conquered by any outside empire; counter-invaded Oblivion during the Oblivion Crisis."},elsweyr:{title:"Elsweyr",meta:"People: Khajiit • Capital: Torval",desc:"A region of southern jungles and northern badlands whose feline inhabitants take different physical forms based on the phases of the twin moons, Masser and Secunda."},valenwood:{title:"Valenwood",meta:"People: Bosmer (Wood Elves) • Capital: Elden Root",desc:"A dense subtropical forest of walking migratory graht-oak cities where the Bosmer follow the strict Green Pact, forbidding the harming of native plant life."},summerset:{title:"Summerset Isles",meta:"People: Altmer (High Elves) • Capital: Alinor",desc:"An isolated southwestern archipelago and cradle of High Elven magic and scholarship. Later renamed Alinor under the rule of the Thalmor and the Third Aldmeri Dominion."},akavir:{title:"Akavir",meta:"Outer Continent • East of Tamriel",desc:"Known as 'Dragon Land,' home to the Tsaesci (serpent-folk), Ka'Po'Tun, Tang Mo, and Kamal. Repeatedly invaded Tamriel in the First and Second Eras."},atmora:{title:"Atmora",meta:"Outer Continent • North of Tamriel",desc:"The ancestral frozen homeland of Ysgramor and the proto-Nords. Abandoned as the continent froze over completely into lifeless ice."},yokuda:{title:"Yokuda",meta:"Outer Continent • West of Tamriel",desc:"The sunken western homeland of the Redguards, destroyed in a mysterious cataclysm during the First Era, leaving only a small archipelago."},aldmeris:{title:"Aldmeris (Old Ehlnofey)",meta:"Mythic Continent • South",desc:"The fabled lost homeland of the ancient Aldmer before they scattered across Tamriel and diverged into Altmer, Bosmer, Dunmer, and Orsimer."},oblivion:{title:"Oblivion",meta:"Outer Planes • Realm of the Daedric Princes",desc:"The infinite void surrounding Mundus containing the 16+ realms of the Daedric Princes, including Mehrunes Dagon's Deadlands and Molag Bal's Coldharbour."},aetherius:{title:"Aetherius",meta:"Immortal Plane • Source of Magicka",desc:"The realm of pure magic and the Aedra, visible from Nirn through the sun and stars punched into the sky when Magnus and the Magna Ge fled creation."}};
+      const RACES=[{short:"Altmer",name:"Altmer (High Elf)",meta:"Homeland: Summerset Isles • Archetype: Pure Mage",desc:"Passives: +50 Magicka & faster Magicka regeneration. Power: Highborn (rapidly restores Magicka). Favored Skills: Illusion, Destruction, Conjuration, Alteration, Restoration, Enchanting."},{short:"Argonian",name:"Argonian",meta:"Homeland: Black Marsh • Archetype: Guerrilla / Thief",desc:"Passives: Waterbreathing & 50% Disease/Poison Resistance. Power: Histskin (regenerates health 10x faster). Favored Skills: Lockpicking, Light Armor, Sneak, Pickpocket, Restoration."},{short:"Bosmer",name:"Bosmer (Wood Elf)",meta:"Homeland: Valenwood • Archetype: Scout / Archer",desc:"Passives: 50% Poison & Disease Resistance. Power: Command Animal (turns wild beasts into temporary allies). Favored Skills: Archery, Light Armor, Sneak, Lockpicking, Alchemy."},{short:"Breton",name:"Breton",meta:"Homeland: High Rock • Archetype: Spell-Resistant Mage",desc:"Passives: 25% Magic Resistance. Power: Dragonskin (absorbs 50% of magicka from incoming spells). Favored Skills: Conjuration, Restoration, Illusion, Alteration, Alchemy, Speech."},{short:"Dunmer",name:"Dunmer (Dark Elf)",meta:"Homeland: Morrowind • Archetype: Spellsword / Nightblade",desc:"Passives: 50% Fire Resistance. Power: Ancestor's Wrath (surrounds caster in a cloak of fire). Favored Skills: Destruction, Light Armor, Sneak, Illusion, Alteration, Alchemy."},{short:"Imperial",name:"Imperial",meta:"Homeland: Cyrodiil • Archetype: Diplomat / Paladin",desc:"Passives: Imperial Luck (finds extra gold everywhere). Power: Voice of the Emperor (calms hostile humanoids). Favored Skills: Restoration, Heavy Armor, One-Handed, Block, Enchanting."},{short:"Khajiit",name:"Khajiit",meta:"Homeland: Elsweyr • Archetype: Stealth / Unarmed",desc:"Passives: Razor Claws (high unarmed strike damage). Power: Night Eye (improved vision in darkness). Favored Skills: Sneak, Archery, One-Handed, Lockpicking, Pickpocket, Alchemy."},{short:"Nord",name:"Nord",meta:"Homeland: Skyrim • Archetype: Berserker / Warrior",desc:"Passives: 50% Frost Resistance. Power: Battle Cry (causes nearby enemies to flee in terror). Favored Skills: Two-Handed, One-Handed, Block, Light Armor, Smithing, Speech."},{short:"Orsimer",name:"Orsimer (Orc)",meta:"Homeland: Orsinium / Strongholds • Archetype: Heavy Vanguard",desc:"Passives: Kinship with Orc Strongholds. Power: Berserker Rage (deals double physical damage and takes half damage). Favored Skills: Heavy Armor, Smithing, Block, Two-Handed, One-Handed."},{short:"Redguard",name:"Redguard",meta:"Homeland: Hammerfell • Archetype: Blademaster / Skirmisher",desc:"Passives: 50% Poison Resistance. Power: Adrenaline Rush (regenerates stamina 10x faster). Favored Skills: One-Handed, Block, Archery, Smithing, Destruction, Alteration."}];
+      const CLASSES=[{spec:"Combat",name:"Warrior",attr:"Strength & Endurance",desc:"Unafraid of light weaponry, Warriors charge headlong into melee with heavy armor, shields, and mastery of blades and blunt weapons."},{spec:"Combat",name:"Knight",attr:"Strength & Personality",desc:"Noble and armored champions trained in heavy plate, swordplay, speechcraft, and restoration to lead allies in battle."},{spec:"Combat",name:"Barbarian",attr:"Strength & Speed",desc:"Fierce, fast-moving shock troops who eschew heavy armor in favor of mobility and devastating two-handed weapons."},{spec:"Combat",name:"Crusader",attr:"Strength & Willpower",desc:"Heavily armored holy warriors who combine martial weapons and shields with Destruction and Restoration magic."},{spec:"Magic",name:"Mage",attr:"Intelligence & Willpower",desc:"Dedicated scholars of the arcane arts relying entirely on spells across Destruction, Conjuration, Alteration, and Illusion."},{spec:"Magic",name:"Battlemage",attr:"Intelligence & Strength",desc:"War-casters trained to wear heavy armor and wield axes or staves while unleashing offensive Destruction and Conjuration magic."},{spec:"Magic",name:"Spellsword",attr:"Willpower & Endurance",desc:"Agile spell-warriors balancing a one-handed blade in one hand and Destruction or Restoration spells in the other."},{spec:"Magic",name:"Sorcerer",attr:"Intelligence & Endurance",desc:"Armored summoners and enchanters who draw upon vast magicka reserves, daedric minions, and ward defenses."},{spec:"Stealth",name:"Assassin",attr:"Speed & Intelligence",desc:"Silent killers specializing in stealth, light armor, alchemy poisons, marksman ambushes, and lethal blade strikes."},{spec:"Stealth",name:"Nightblade",attr:"Willpower & Speed",desc:"Shadow-casters who blend Illusion invisibility, Destruction, and Alteration with classic thief agility."},{spec:"Stealth",name:"Archer / Scout",attr:"Agility & Endurance",desc:"Wilderness trackers and sharpshooters skilled with bows, light armor, athletics, and tactical terrain control."},{spec:"Stealth",name:"Thief / Agent",attr:"Agility & Personality",desc:"Masters of lockpicking, pickpocketing, sneak, and silver-tongued persuasion who thrive in shadows and royal courts."}];
