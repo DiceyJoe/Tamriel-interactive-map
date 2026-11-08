@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Tamriel Lore">
+<title>The Elder Scrolls: Interactive Map & Timeline</title>
+<style>
+  :root {
+    --bg: #0f0e0c;
+    --card: #1a1814;
+    --card-alt: #24211b;
+    --border: #3d3528;
+    --gold: #d4af37;
+    --gold-dim: #9c7e24;
+    --text: #ece5d8;
+    --muted: #a69c8a;
+    --accent: #8b261d;
+    --safe-top: env(safe-area-inset-top, 12px);
+    --safe-bottom: env(safe-area-inset-bottom, 20px);
+  }
+  * {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Georgia, serif;
+    line-height: 1.5;
+    padding-top: var(--safe-top);
+    padding-bottom: calc(var(--safe-bottom) + 60px);
+  }
+  header {
+    padding: 16px 16px 12px;
+    background: linear-gradient(180deg, #1f1b15 0%, var(--bg) 100%);
+    border-bottom: 1px solid var(--border);
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  header h1 {
+    margin: 0;
+    font-size: 1.25rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-family: Georgia, "Times New Roman", serif;
+  }
+  header p {
+    margin: 4px 0 0;
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+  .tabs {
+    display: flex;
+    gap: 8px;
+    padding: 10px 16px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 66px;
+    z-index: 40;
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 10px 8px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--muted);
+    font-weight: 600;
+    font-size: 0.88rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .tab-btn.active {
+    background: var(--card-alt);
+    border-color: var(--gold);
+    color: var(--gold);
+    box-shadow: 0 0 12px rgba(212, 175, 55, 0.15);
+  }
+  .section {
+    display: none;
+    padding: 14px 16px;
+    max-width: 680px;
+    margin: 0 auto;
+  }
+  .section.active {
+    display: block;
+  }
+  .map-container {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 14px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  }
+  .map-hint {
+    text-align: center;
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  svg#tamriel-map {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 8px;
+    background: #12171c;
+    border: 1px solid #28323c;
+  }
+  .province-shape {
+    stroke: #14120e;
+    stroke-width: 1.5;
+    cursor: pointer;
+    transition: opacity 0.2s, filter 0.2s;
+  }
+  .province-shape:hover, .province-shape.selected {
+    stroke: var(--gold);
+    stroke-width: 2.5;
+    filter: brightness(1.25);
+  }
+  .province-label {
+    fill: #f5efe4;
+    font-size: 9px;
+    font-weight: 700;
+    text-anchor: middle;
+    pointer-events: none;
+    text-shadow: 0 1px 3px #000, 0 0 4px #000;
+    letter-spacing: 0.04em;
+  }
+  .continent-badge-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+    justify-content: center;
+  }
+  .pill-btn {
+    background: var(--card-alt);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 10px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    cursor: pointer;
+  }
+  .pill-btn.active {
+    border-color: var(--gold);
+    color: var(--gold);
+    background: #2e291f;
+  }
+  .detail-card {
+    background: var(--card);
+    border: 1px solid var(--gold-dim);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+  .detail-card h2 {
+    margin: 0 0 4px;
+    font-size: 1.15rem;
+    color: var(--gold);
+    font-family: Georgia, serif;
+  }
+  .detail-meta {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .tag {
+    background: var(--card-alt);
+    border: 1px solid var(--border);
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    color: var(--gold);
+  }
+  .detail-card p {
+    margin: 0 0 10px;
+    font-size: 0.92rem;
+  }
+  .detail-card ul {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 0.88rem;
+    color: #dcd3c2;
+  }
+  .detail-card li {
+    margin-bottom: 6px;
+  }
+
+  /* Timeline styles */
+  .era-scroller {
+    display: flex;
+    overflow-x: auto;
+    gap: 8px;
+    padding-bottom: 10px;
+    margin-bottom: 12px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .era-scroller::-webkit-scrollbar {
+    display: none;
+  }
+  .era-chip {
+    flex: 0 0 auto;
+    padding: 8px 14px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    color: var(--muted);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .era-chip.active {
+    background: var(--gold);
+    color: #12100c;
+    border-color: var(--gold);
+  }
+  .search-box {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+    font-size: 0.9rem;
+    margin-bottom: 14px;
+  }
+  .search-box:focus {
+    outline: none;
+    border-color: var(--gold);
+  }
+  .era-banner {
+    background: linear-gradient(135deg, #241f18 0%, #171511 100%);
+    border-left: 3px solid var(--gold);
+    padding: 12px 14px;
+    border-radius: 8px;
+    margin-bottom: 14px;
+  }
+  .era-banner h3 {
+    margin: 0 0 4px;
+    color: var(--gold);
+    font-size: 1.05rem;
+    font-family: Georgia, serif;
+  }
+  .era-banner p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  .timeline-list {
+    position: relative;
+    padding-left: 20px;
+    border-left: 2px solid var(--border);
+    margin-left: 6px;
+  }
+  .event-item {
+    position: relative;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 12px;
+  }
+  .event-item::before {
+    content: "";
+    position: absolute;
+    left: -27px;
+    top: 16px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--gold);
+    border: 2px solid var(--bg);
+  }
+  .event-year {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--gold);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .event-title {
+    font-size: 0.98rem;
+    font-weight: 700;
+    margin: 2px 0 6px;
+    color: var(--text);
+  }
+  .event-desc {
+    font-size: 0.86rem;
+    color: #d5cbb8;
+    margin: 0;
+  }
+  .game-badge {
+    display: inline-block;
+    margin-top: 8px;
+    background: rgba(139, 38, 29, 0.35);
+    border: 1px solid #b84237;
+    color: #ffbeb8;
+    font-size: 0.74rem;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-weight: 600;
+  }
+  .game-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+  .game-card-info h4 {
+    margin: 0 0 4px;
+    color: var(--gold);
+    font-size: 0.95rem;
+  }
+  .game-card-info p {
+    margin: 0;
+    font-size: 0.82rem;
+    color: var(--muted);
+  }
+  .game-year-pill {
+    background: var(--card-alt);
+    border: 1px solid var(--gold-dim);
+    color: var(--gold);
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .offline-tip {
+    background: #1b221c;
+    border: 1px solid #354a38;
+    color: #b7d4bb;
+    font-size: 0.78rem;
+    padding: 10px 12px;
+    border-radius: 8px;
+    margin-top: 12px;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>The Elder Scrolls</h1>
+  <p>Offline Atlas of Nirn &amp; Chronological Lore Explorer</p>
+</header>
+
+<nav class="tabs">
+  <button class="tab-btn active" onclick="switchTab('map', this)">Map of Nirn</button>
+  <button class="tab-btn" onclick="switchTab('timeline', this)">Eras &amp; Events</button>
+  <button class="tab-btn" onclick="switchTab('games', this)">Game Order</button>
+</nav>
+
+<!-- MAP SECTION -->
+<section id="tab-map" class="section active">
+  <div class="map-container">
+    <div class="map-hint">Tap any province on Tamriel or select a realm below</div>
+    <svg id="tamriel-map" viewBox="0 0 400 280" xmlns="http://www.w3.org/2000/svg">
+      <!-- Ocean grid lines -->
+      <line x1="0" y1="70" x2="400" y2="70" stroke="#1b242c" stroke-width="1"/>
+      <line x1="0" y1="140" x2="400" y2="140" stroke="#1b242c" stroke-width="1"/>
+      <line x1="0" y1="210" x2="400" y2="210" stroke="#1b242c" stroke-width="1"/>
+      <line x1="100" y1="0" x2="100" y2="280" stroke="#1b242c" stroke-width="1"/>
+      <line x1="200" y1="0" x2="200" y2="280" stroke="#1b242c" stroke-width="1"/>
+      <line x1="300" y1="0" x2="300" y2="280" stroke="#1b242c" stroke-width="1"/>
+
+      <!-- High Rock -->
+      <path id="prov-highrock" class="province-shape" fill="#4f6d7a"
+        d="M 55,68 L 95,55 L 122,64 L 116,85 L 92,90 L 72,102 L 50,95 Z"
+        onclick="selectRegion('highrock')"/>
+      <text x="86" y="79" class="province-label">HIGH ROCK</text>
+
+      <!-- Hammerfell -->
+      <path id="prov-hammerfell" class="province-shape" fill="#a8763e"
+        d="M 55,105 L 92,90 L 116,85 L 138,108 L 132,140 L 90,145 L 62,130 Z"
+        onclick="selectRegion('hammerfell')"/>
+      <text x="98" y="122" class="province-label">HAMMERFELL</text>
+
+      <!-- Skyrim -->
+      <path id="prov-skyrim" class="province-shape" fill="#5c768d"
+        d="M 122,64 L 185,48 L 245,56 L 248,106 L 195,112 L 138,108 L 116,85 Z"
+        onclick="selectRegion('skyrim')"/>
+      <text x="186" y="83" class="province-label">SKYRIM</text>
+
+      <!-- Morrowind + Vvardenfell -->
+      <path id="prov-morrowind" class="province-shape" fill="#7d4e57"
+        d="M 245,56 L 315,52 L 348,88 L 336,142 L 292,155 L 270,132 L 248,106 Z"
+        onclick="selectRegion('morrowind')"/>
+      <circle cx="295" cy="92" r="16" fill="#633942" stroke="#d4af37" stroke-width="0.8" pointer-events="none"/>
+      <text x="298" y="122" class="province-label">MORROWIND</text>
+
+      <!-- Cyrodiil -->
+      <path id="prov-cyrodiil" class="province-shape" fill="#6b8e4e"
+        d="M 138,108 L 195,112 L 248,106 L 270,132 L 265,178 L 210,192 L 155,176 L 132,140 Z"
+        onclick="selectRegion('cyrodiil')"/>
+      <text x="202" y="150" class="province-label">CYRODIIL</text>
+
+      <!-- Black Marsh -->
+      <path id="prov-blackmarsh" class="province-shape" fill="#3b6e5c"
+        d="M 270,132 L 292,155 L 336,142 L 342,202 L 295,224 L 262,205 L 265,178 Z"
+        onclick="selectRegion('blackmarsh')"/>
+      <text x="303" y="185" class="province-label">BLACK MARSH</text>
+
+      <!-- Elsweyr -->
+      <path id="prov-elsweyr" class="province-shape" fill="#b58348"
+        d="M 185,185 L 210,192 L 252,182 L 248,232 L 204,238 L 188,215 Z"
+        onclick="selectRegion('elsweyr')"/>
+      <text x="219" y="213" class="province-label">ELSWEYR</text>
+
+      <!-- Valenwood -->
+      <path id="prov-valenwood" class="province-shape" fill="#467a47"
+        d="M 130,174 L 155,176 L 185,185 L 188,215 L 178,244 L 136,238 L 122,205 Z"
+        onclick="selectRegion('valenwood')"/>
+      <text x="155" y="212" class="province-label">VALENWOOD</text>
+
+      <!-- Summerset Isles -->
+      <path id="prov-summerset" class="province-shape" fill="#8f7a49"
+        d="M 48,205 L 82,196 L 94,225 L 76,254 L 46,245 Z"
+        onclick="selectRegion('summerset')"/>
+      <path class="province-shape" fill="#8f7a49"
+        d="M 98,212 L 112,210 L 114,232 L 98,234 Z"
+        onclick="selectRegion('summerset')"/>
+      <text x="72" y="230" class="province-label">SUMMERSET</text>
+
+      <!-- Compass Rose -->
+      <text x="368" y="28" fill="#d4af37" font-size="11" font-weight="bold" text-anchor="middle">N</text>
+      <line x1="368" y1="32" x2="368" y2="48" stroke="#d4af37" stroke-width="1.2"/>
+      <line x1="360" y1="40" x2="376" y2="40" stroke="#d4af37" stroke-width="1.2"/>
+    </svg>
+
+    <div class="continent-badge-row">
+      <button class="pill-btn" onclick="selectRegion('atmora')">Atmora (North)</button>
+      <button class="pill-btn" onclick="selectRegion('akavir')">Akavir (East)</button>
+      <button class="pill-btn" onclick="selectRegion('yokuda')">Yokuda (West)</button>
+      <button class="pill-btn" onclick="selectRegion('pyandonea')">Pyandonea (South)</button>
+      <button class="pill-btn" onclick="selectRegion('oblivion')">Oblivion &amp; Aetherius</button>
+    </div>
+  </div>
+
+  <div id="region-detail" class="detail-card"></div>
+</section>
+
+<!-- TIMELINE SECTION -->
+<section id="tab-timeline" class="section">
+  <div class="era-scroller" id="era-scroller"></div>
+  <input type="text" id="event-search" class="search-box" placeholder="Filter events (e.g., Red Mountain, Septim, Dragon)..." oninput="renderTimeline()">
+  <div id="era-banner" class="era-banner"></div>
+  <div id="timeline-list" class="timeline-list"></div>
+</section>
+
+<!-- GAMES SECTION -->
+<section id="tab-games" class="section">
+  <div class="era-banner">
+    <h3>Chronological Game Order</h3>
+    <p>Every mainline and spinoff title placed on Tamriel's official timeline.</p>
+  </div>
+  <div id="games-list"></div>
+  <div class="offline-tip">
+    <strong>iPhone Tip:</strong> In Safari, tap the <strong>Share</strong> icon and choose <strong>"Add to Home Screen"</strong> to launch this guide offline anytime like a native app.
+  </div>
+</section>
+
+<script>
+const REGIONS = {
+  cyrodiil: {
+    name: "Cyrodiil (The Heartland)",
+    natives: "Imperials",
+    capital: "Imperial City",
+    summary: "The central province of Tamriel and seat of three human Empires. Home to the White-Gold Tower, Nibenay Valley, and Colovian Highlands.",
+    highlights: [
+      "1E 243: Slave-Queen Alessia overthrows the Ayleids and forms the First Empire.",
+      "2E 896: Tiber Septim unites all of Tamriel under the Third Empire.",
+      "3E 433: Center of the Oblivion Crisis; Martin Septim banishes Mehrunes Dagon.",
+      "4E 175: Site of the White-Gold Concordat ending the Great War."
+    ]
+  },
+  skyrim: {
+    name: "Skyrim (The Old Kingdom)",
+    natives: "Nords",
+    capital: "Solitude (formerly Windhelm)",
+    summary: "A rugged, mountainous northern realm dominated by the Throat of the World, ancient Nordic ruins, and fierce warrior traditions.",
+    highlights: [
+      "Merethic Era: Ysgramor and the Five Hundred Companions defeat the Snow Elves.",
+      "Merethic Era: The Dragon War ends with Alduin cast adrift in time.",
+      "4E 201: Civil war erupts between the Stormcloaks and Imperial Legion as dragons return."
+    ]
+  },
+  morrowind: {
+    name: "Morrowind",
+    natives: "Dunmer (Dark Elves)",
+    capital: "Blacklight (formerly Mournhold)",
+    summary: "A volcanic northeastern land shaped by Red Mountain, Great House politics, and the legacy of the living god-kings of the Tribunal.",
+    highlights: [
+      "1E 700: Battle of Red Mountain; the Dwemer vanish and the Chimer become Dunmer.",
+      "3E 427: The Nerevarine defeats Dagoth Ur and ends the Tribunal's divinity.",
+      "4E 5: The Red Year destroys Vvardenfell when Baar Dau strikes Vivec City."
+    ]
+  },
+  highrock: {
+    name: "High Rock",
+    natives: "Bretons & Orcs (Orsinium)",
+    capital: "Daggerfall / Wayrest",
+    summary: "A feudal northwestern province of squabbling kingdoms, knightly orders, and magical mastery, alongside the mountain stronghold of Orsinium.",
+    highlights: [
+      "Convention: The Adamantine Tower on Balfiera is the oldest structure in Tamriel.",
+      "3E 417: The Warp in the West merges conflicting timelines across the Iliac Bay."
+    ]
+  },
+  hammerfell: {
+    name: "Hammerfell",
+    natives: "Redguards",
+    capital: "Sentinel",
+    summary: "An arid western land of vast deserts (Alik'r), coastal trade cities, and master sword-singers descended from sunken Yokuda.",
+    highlights: [
+      "1E 808: The Ra Gada warrior wave arrives from Yokuda and conquers the region.",
+      "2E 864: Cyrus leads the Stros M'Kai uprising against Tiber Septim's forces.",
+      "4E 175–180: Redguards reject the White-Gold Concordat and fight the Thalmor to a standstill."
+    ]
+  },
+  summerset: {
+    name: "Summerset Isles (Alinor)",
+    natives: "Altmer (High Elves)",
+    capital: "Alinor",
+    summary: "A lush southwestern archipelago renowned for high magic, Crystal-Like-Law, and the ancient Aldmeri civilization.",
+    highlights: [
+      "Merethic Era: First settled by the Aldmer arriving from Aldmeris.",
+      "2E 896: Conquered by Tiber Septim using the brass golem Numidium.",
+      "4E 22: The Thalmor seize control and establish the Third Aldmeri Dominion."
+    ]
+  },
+  valenwood: {
+    name: "Valenwood",
+    natives: "Bosmer (Wood Elves)",
+    capital: "Falinesti",
+    summary: "A dense, subtropical forest province where cities are built inside giant migratory graht-oaks and the Green Pact governs life.",
+    highlights: [
+      "1E 0: King Eplear founds the Camoran Dynasty, beginning the First Era.",
+      "4E 29: A Thalmor-backed coup merges Valenwood into the Aldmeri Dominion."
+    ]
+  },
+  elsweyr: {
+    name: "Elsweyr",
+    natives: "Khajiit",
+    capital: "Torval / Rimmen",
+    summary: "A southern realm of badlands, deserts, and jungles where Khajiit furstocks are determined by the phases of the twin moons Masser and Secunda.",
+    highlights: [
+      "2E 309: Keirgo of Anequina and Eshita of Pellitine unite the kingdoms into Elsweyr.",
+      "4E 98–100: The Void Nights cause the moons to vanish; the Thalmor claim credit for their return."
+    ]
+  },
+  blackmarsh: {
+    name: "Black Marsh (Argonia)",
+    natives: "Argonians (Saxhleel)",
+    capital: "Helstrom",
+    summary: "An impenetrable southeastern swampland toxic to outsiders, guided by the sentient Hist trees.",
+    highlights: [
+      "3E 433: Argonians counter-invade the Deadlands during the Oblivion Crisis.",
+      "4E 6: Argonian forces invade southern Morrowind following the Red Year."
+    ]
+  },
+  atmora: {
+    name: "Atmora (Northern Continent)",
+    natives: "Atmorans (Ancestors of Nords)",
+    capital: "Jylkurfyk (Historical)",
+    summary: "A frozen landmass far north of Skyrim. Once habitable, climate collapse drove Ysgramor and human settlers south to Tamriel.",
+    highlights: [
+      "Late Merethic Era: Civil war and freezing temperatures force final human migrations.",
+      "Modern Era: Completely frozen in time and uninhabited."
+    ]
+  },
+  akavir: {
+    name: "Akavir (Eastern Continent)",
+    natives: "Tsaesci, Ka'Po'Tun, Tang Mo, Kamal",
+    capital: "Unknown",
+    summary: "The mysterious 'Dragon Land' across the eastern ocean. Home to serpent-folk and tiger-folk who invaded Tamriel multiple times.",
+    highlights: [
+      "1E 2703: Tsaesci invasion defeated by Reman Cyrodiil at Pale Pass.",
+      "2E 572: Kamal snow-demons invade Morrowind and Skyrim before being crushed.",
+      "3E 288: Emperor Uriel Septim V launches a disastrous failed invasion of Akavir."
+    ]
+  },
+  yokuda: {
+    name: "Yokuda (Western Archipelago)",
+    natives: "Yokudans (Ancestors of Redguards)",
+    capital: "Hattu (Sunken)",
+    summary: "The former western continent of the Redguards, shattered by a cataclysm in the First Era. Only sparse rocky islands remain.",
+    highlights: [
+      "1E 792: A catastrophic event sinks nearly the entire continent into the sea.",
+      "1E 808: Survivors sail east to Hammerfell as the Ra Gada."
+    ]
+  },
+  pyandonea: {
+    name: "Pyandonea (Southern Continent)",
+    natives: "Maormer (Sea Elves)",
+    capital: "Abbarbas",
+    summary: "A mist-covered jungle island continent south of the Summerset Isles, ruled for millennia by the immortal wizard-king Orgnum.",
+    highlights: [
+      "3E 110: War of the Isle; the Maormer fleet is destroyed by a combined Imperial-Altmer navy and the Psijic Order."
+    ]
+  },
+  oblivion: {
+    name: "Cosmology: Mundus, Oblivion & Aetherius",
+    natives: "Aedra, Daedra, Magna Ge",
+    capital: "Aurbis (The Universe)",
+    summary: "Nirn sits inside the mortal plane of Mundus, surrounded by the 16+ realms of Oblivion (ruled by Daedric Princes) and the pure magic of Aetherius.",
+    highlights: [
+      "Mundus: Mortal realm sustained by metaphysical Towers (White-Gold, Throat of the World, Adamantine).",
+      "Oblivion: Includes Coldharbour (Molag Bal), Deadlands (Mehrunes Dagon), and Apocrypha (Hermaeus Mora).",
+      "Aetherius: Immortal plane of magic and Sovngarde, source of sunlight via the stars and sun."
+    ]
+  }
+};
+
+const ERAS = [
+  {
+    id: "all",
+    label: "All Eras",
+    title: "Complete Chronology of Nirn",
+    desc: "Showing major turning points across all six historical eras."
+  },
+  {
+    id: "dawn",
+    label: "Dawn Era",
+    title: "Dawn Era (Mythic Creation)",
+    desc: "The timeless primordial age when gods shaped the mortal plane of Mundus."
+  },
+  {
+    id: "merethic",
+    label: "Merethic Era",
+    title: "Merethic Era (ME 2500 – ME 1)",
+    desc: "Counted backward from 1E 0; the age of Elven expansion and early human arrival."
+  },
+  {
+    id: "1e",
+    label: "First Era (1E)",
+    title: "First Era (1E 0 – 1E 2920)",
+    desc: "Recorded history begins: rise of human empires, fall of the Ayleids, and disappearance of the Dwemer."
+  },
+  {
+    id: "2e",
+    label: "Second Era (2E)",
+    title: "Second Era (2E 0 – 2E 896)",
+    desc: "Centuries of Interregnum chaos and the Planemeld, ending with Tiber Septim's conquest."
+  },
+  {
+    id: "3e",
+    label: "Third Era (3E)",
+    title: "Third Era (3E 0 – 3E 433)",
+    desc: "The 433-year golden reign of the Septim Dynasty, ending in the Oblivion Crisis."
+  },
+  {
+    id: "4e",
+    label: "Fourth Era (4E)",
+    title: "Fourth Era (4E 1 – Present)",
+    desc: "The Mede Empire, rise of the Aldmeri Dominion, and the return of Alduin in Skyrim."
+  }
+];
+
+const EVENTS = [
+  { era: "dawn", year: "Dawn Era", title: "Creation of Mundus", desc: "Lorkhan convinces or tricks the Aedra into sacrificing their power to create the mortal plane of Mundus and planet Nirn." },
+  { era: "dawn", year: "Dawn Era", title: "Convention at Adamantine Tower", desc: "The gods punish Lorkhan by casting his Heart into Tamriel, forming Red Mountain in Morrowind and establishing linear time." },
+  { era: "merethic", year: "ME 2500+", title: "Elven Settlement of Tamriel", desc: "Ancient Aldmer leave Aldmeris, branching into Altmer, Bosmer, Ayleids, Chimer, Dwemer, and Falmer." },
+  { era: "merethic", year: "Late ME", title: "Night of Tears & Ysgramor", desc: "Snow Elves sack Saarthal; Ysgramor returns from Atmora with his Five Hundred Companions to drive the elves from Skyrim." },
+  { era: "merethic", year: "Late ME", title: "The Dragon War", desc: "Ancient Nords rebel against Dragon Priests and banish Alduin forward through time using an Elder Scroll." },
+  { era: "1e", year: "1E 0", title: "Founding of the Camoran Dynasty", desc: "King Eplear unites Valenwood, marking the official start of recorded First Era history." },
+  { era: "1e", year: "1E 242–243", title: "The Alessian Rebellion", desc: "Slave-Queen Alessia overthrows the Ayleids in Cyrodiil, founding the First Empire and forging the Dragonfire covenant with Akatosh." },
+  { era: "1e", year: "1E 700", title: "Battle of Red Mountain", desc: "Kagrenac strikes the Heart of Lorkhan, causing the entire Dwemer race to vanish. The Tribunal becomes living gods; Azura curses the Chimer into Dunmer." },
+  { era: "1e", year: "1E 792–808", title: "Sinking of Yokuda & Ra Gada", desc: "Yokuda sinks into the western sea; warrior refugees sail east and conquer Hammerfell." },
+  { era: "1e", year: "1E 2703", title: "Reman Empire Founded", desc: "Reman Cyrodiil unites Tamriel's human provinces to defeat an Akaviri invasion at Pale Pass, creating the Second Empire." },
+  { era: "1e", year: "1E 2920", title: "Assassination of Reman III", desc: "The Morag Tong assassinates Emperor Reman III and his heir, ending the First Era as Akaviri Potentates take power." },
+  { era: "2e", year: "2E 230–321", title: "Founding of the Mages & Fighters Guilds", desc: "Vanus Galerion establishes the Mages Guild on Artaeum, followed by the creation of the Fighters Guild under the Guilds Act." },
+  { era: "2e", year: "2E 430", title: "Start of the Interregnum", desc: "Assassination of the last Akaviri Potentate fractures the Empire into centuries of warlord rule." },
+  { era: "2e", year: "2E 578–582", title: "The Soulburst & Planemeld", desc: "Mannimarco triggers a magical catastrophe allowing Molag Bal to attempt merging Nirn with Coldharbour during the Three Banners War.", game: "The Elder Scrolls Online" },
+  { era: "2e", year: "2E 854–896", title: "The Tiber Wars & Third Empire", desc: "Tiber Septim conquers all of Tamriel using the Numidium, unifying the continent and ascending as the divine Talos.", game: "TES Adventures: Redguard (2E 864)" },
+  { era: "3e", year: "3E 120–127", title: "War of the Red Diamond", desc: "Queen Potema of Solitude sparks a brutal succession civil war across the Septim Empire." },
+  { era: "3e", year: "3E 389–399", title: "The Imperial Simulacrum", desc: "Battlemage Jagar Tharn traps Emperor Uriel Septim VII in Oblivion and impersonates him for ten years.", game: "The Elder Scrolls: Arena" },
+  { era: "3e", year: "3E 417", title: "The Warp in the West", desc: "Reactivation of the Numidium triggers a Dragon Break across the Iliac Bay, merging multiple contradictory timelines into one.", game: "The Elder Scrolls II: Daggerfall" },
+  { era: "3e", year: "3E 427", title: "The Blight Crisis on Vvardenfell", desc: "The Nerevarine destroys the enchantments on the Heart of Lorkhan, defeating Dagoth Ur and ending the Tribunal's godhood.", game: "The Elder Scrolls III: Morrowind" },
+  { era: "3e", year: "3E 433", title: "The Oblivion Crisis", desc: "The Mythic Dawn assassinates Uriel Septim VII. Martin Septim shatters the Amulet of Kings to become an avatar of Akatosh and banish Mehrunes Dagon.", game: "The Elder Scrolls IV: Oblivion" },
+  { era: "4e", year: "4E 5", title: "The Red Year", desc: "Baar Dau crashes into Vivec City, triggering a catastrophic eruption of Red Mountain that devastates Morrowind." },
+  { era: "4e", year: "4E 22–29", title: "Rise of the Third Aldmeri Dominion", desc: "The Thalmor seize control of Summerset and Valenwood, reviving the Aldmeri Dominion." },
+  { era: "4e", year: "4E 171–175", title: "The Great War & White-Gold Concordat", desc: "The Aldmeri Dominion invades the Mede Empire. Peace is bought by ceding southern Hammerfell and outlawing Talos worship." },
+  { era: "4e", year: "4E 201", title: "Skyrim Civil War & Return of Alduin", desc: "Ulfric Stormcloak rebels against the Empire just as Alduin returns to resurrect dragons, awakening the Last Dragonborn.", game: "The Elder Scrolls V: Skyrim" }
+];
+
+const GAMES = [
+  { title: "The Elder Scrolls Online", year: "2E 582", setting: "All of Tamriel & Coldharbour" },
+  { title: "TES Adventures: Redguard", year: "2E 864", setting: "Stros M'Kai (Hammerfell)" },
+  { title: "The Elder Scrolls: Arena", year: "3E 389–399", setting: "All Provinces of Tamriel" },
+  { title: "An Elder Scrolls Legend: Battlespire", year: "3E 398", setting: "The Battlespire (Oblivion)" },
+  { title: "The Elder Scrolls II: Daggerfall", year: "3E 405–417", setting: "Iliac Bay (High Rock & Hammerfell)" },
+  { title: "The Elder Scrolls III: Morrowind", year: "3E 427", setting: "Vvardenfell, Mournhold & Solstheim" },
+  { title: "The Elder Scrolls IV: Oblivion", year: "3E 433", setting: "Cyrodiil, Deadlands & Shivering Isles" },
+  { title: "The Elder Scrolls: Blades", year: "4E 180", setting: "Post-Great War Cyrodiil" },
+  { title: "The Elder Scrolls V: Skyrim", year: "4E 201", setting: "Skyrim & Solstheim" }
+];
+
+let currentRegion = "cyrodiil";
+let currentEra = "all";
+
+function switchTab(tabName, btn) {
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+  document.getElementById("tab-" + tabName).classList.add("active");
+}
+
+function selectRegion(key) {
+  currentRegion = key;
+  document.querySelectorAll(".province-shape").forEach(el => el.classList.remove("selected"));
+  const svgEl = document.getElementById("prov-" + key);
+  if (svgEl) svgEl.classList.add("selected");
+
+  document.querySelectorAll(".pill-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.getAttribute("onclick").includes("'" + key + "'"));
+  });
+
+  const data = REGIONS[key];
+  const container = document.getElementById("region-detail");
+  container.innerHTML = `
+    <h2>${data.name}</h2>
+    <div class="detail-meta">
+      <span class="tag">Natives: ${data.natives}</span>
+      <span class="tag">Capital: ${data.capital}</span>
+    </div>
+    <p>${data.summary}</p>
+    <ul>
+      ${data.highlights.map(h => `<li>${h}</li>`).join("")}
+    </ul>
+  `;
+}
+
+function renderEraScroller() {
+  const scroller = document.getElementById("era-scroller");
+  scroller.innerHTML = ERAS.map(e => `
+    <button class="era-chip ${e.id === currentEra ? 'active' : ''}" onclick="selectEra('${e.id}')">${e.label}</button>
+  `).join("");
+}
+
+function selectEra(eraId) {
+  currentEra = eraId;
+  renderEraScroller();
+  renderTimeline();
+}
+
+function renderTimeline() {
+  const eraObj = ERAS.find(e => e.id === currentEra);
+  document.getElementById("era-banner").innerHTML = `
+    <h3>${eraObj.title}</h3>
+    <p>${eraObj.desc}</p>
+  `;
+
+  const query = document.getElementById("event-search").value.toLowerCase().trim();
+  const filtered = EVENTS.filter(ev => {
+    const matchesEra = currentEra === "all" || ev.era === currentEra;
+    const matchesText = !query ||
+      ev.title.toLowerCase().includes(query) ||
+      ev.desc.toLowerCase().includes(query) ||
+      ev.year.toLowerCase().includes(query) ||
+      (ev.game && ev.game.toLowerCase().includes(query));
+    return matchesEra && matchesText;
+  });
+
+  const list = document.getElementById("timeline-list");
+  if (filtered.length === 0) {
+    list.innerHTML = `<div class="event-item"><p class="event-desc">No matching events found.</p></div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(ev => `
+    <div class="event-item">
+      <div class="event-year">${ev.year}</div>
+      <div class="event-title">${ev.title}</div>
+      <p class="event-desc">${ev.desc}</p>
+      ${ev.game ? `<span class="game-badge">${ev.game}</span>` : ""}
+    </div>
+  `).join("");
+}
+
+function renderGames() {
+  const container = document.getElementById("games-list");
+  container.innerHTML = GAMES.map(g => `
+    <div class="game-card">
+      <div class="game-card-info">
+        <h4>${g.title}</h4>
+        <p>${g.setting}</p>
+      </div>
+      <div class="game-year-pill">${g.year}</div>
+    </div>
+  `).join("");
+}
+
+// Initialize
+selectRegion("cyrodiil");
+renderEraScroller();
+renderTimeline();
+renderGames();
+</script>
+</body>
+</html>
