@@ -1,0 +1,307 @@
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>The Elder Scrolls: Interactive Map & Timeline</title>
+<style>
+  :root {
+    --bg: #0c0f14;
+    --panel: #151a22;
+    --panel-light: #1e2530;
+    --gold: #d4af37;
+    --gold-dim: #9c7f24;
+    --text: #e8e6e1;
+    --muted: #9aa0a6;
+    --border: #2c3545;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Georgia, serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    padding-bottom: 40px;
+  }
+  header {
+    text-align: center;
+    padding: 20px 16px 14px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, #161b24 0%, #0c0f14 100%);
+  }
+  header h1 { font-size: 1.5rem; letter-spacing: 2px; color: var(--gold); text-transform: uppercase; }
+  header p { font-size: 0.85rem; color: var(--muted); margin-top: 4px; }
+  .tabs {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 20;
+  }
+  .tab-btn {
+    background: var(--panel-light);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .tab-btn.active { background: var(--gold); color: #0c0f14; border-color: var(--gold); }
+  .section { display: none; padding: 14px; max-width: 1000px; margin: 0 auto; }
+  .section.active { display: block; }
+  .hint { text-align: center; font-size: 0.85rem; color: var(--muted); margin-bottom: 10px; }
+  .map-wrapper {
+    position: relative;
+    width: 100%;
+    height: 460px;
+    background: radial-gradient(circle at center, #142233 0%, #09101a 100%);
+    border: 1px solid var(--gold-dim);
+    border-radius: 10px;
+    overflow: hidden;
+    touch-action: none;
+  }
+  .zoom-controls {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 10;
+  }
+  .zoom-btn {
+    width: 34px;
+    height: 34px;
+    background: rgba(21, 26, 34, 0.9);
+    color: var(--gold);
+    border: 1px solid var(--gold-dim);
+    border-radius: 6px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .zoom-btn:active { background: var(--gold); color: #000; }
+  svg#tamriel-svg { width: 100%; height: 100%; cursor: grab; }
+  svg#tamriel-svg:active { cursor: grabbing; }
+  .province {
+    stroke: #1b222c;
+    stroke-width: 1.4;
+    cursor: pointer;
+    transition: opacity 0.2s, filter 0.2s;
+  }
+  .province:hover, .province.selected {
+    filter: brightness(1.25);
+    stroke: var(--gold);
+    stroke-width: 2;
+  }
+  .mountain {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.35);
+    stroke-width: 1.3;
+    stroke-linecap: round;
+    pointer-events: none;
+  }
+  .river {
+    fill: none;
+    stroke: #3b7ea1;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    pointer-events: none;
+  }
+  .prov-label {
+    font-size: 9.5px;
+    font-weight: 700;
+    fill: #ffffff;
+    text-anchor: middle;
+    letter-spacing: 0.8px;
+    text-shadow: 0 1px 3px #000;
+    pointer-events: none;
+  }
+  .city-dot { fill: var(--gold); stroke: #000; stroke-width: 1; pointer-events: none; }
+  .city-label { font-size: 6.5px; fill: #f5e6b3; text-anchor: middle; text-shadow: 0 1px 2px #000; pointer-events: none; }
+  .realm-bar { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 12px; }
+  .realm-btn {
+    background: var(--panel);
+    color: var(--gold);
+    border: 1px solid var(--border);
+    padding: 6px 10px;
+    border-radius: 5px;
+    font-size: 0.78rem;
+    cursor: pointer;
+  }
+  .realm-btn:hover { border-color: var(--gold); }
+  .lore-card {
+    margin-top: 14px;
+    background: var(--panel);
+    border: 1px solid var(--gold-dim);
+    border-radius: 8px;
+    padding: 16px;
+  }
+  .lore-card h2 { color: var(--gold); font-size: 1.2rem; margin-bottom: 4px; }
+  .lore-meta { font-size: 0.8rem; color: var(--muted); margin-bottom: 10px; }
+  .timeline-item, .game-item {
+    background: var(--panel);
+    border-left: 3px solid var(--gold);
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    border-radius: 0 6px 6px 0;
+  }
+  .era-badge {
+    display: inline-block;
+    background: var(--panel-light);
+    color: var(--gold);
+    font-size: 0.72rem;
+    font-weight: bold;
+    padding: 2px 7px;
+    border-radius: 4px;
+    margin-bottom: 4px;
+  }
+  .timeline-item h3, .game-item h3 { font-size: 1rem; color: #fff; }
+  .timeline-item p, .game-item p { font-size: 0.86rem; color: #cfd3da; margin-top: 4px; }
+  .tip-box {
+    margin-top: 20px;
+    padding: 12px;
+    background: var(--panel-light);
+    border: 1px dashed var(--gold-dim);
+    border-radius: 8px;
+    font-size: 0.8rem;
+    color: var(--muted);
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>The Elder Scrolls</h1>
+  <p>Offline Atlas of Nirn &amp; Chronological Lore Explorer</p>
+</header>
+
+<nav class="tabs">
+  <button class="tab-btn active" onclick="switchTab('map-sec', this)">Map of Nirn</button>
+  <button class="tab-btn" onclick="switchTab('era-sec', this)">Eras &amp; Events</button>
+  <button class="tab-btn" onclick="switchTab('game-sec', this)">Game Order</button>
+</nav>
+
+<section id="map-sec" class="section active">
+  <p class="hint">Pinch/scroll or use + / − to zoom, drag to pan, and tap any province or realm</p>
+
+  <div class="map-wrapper" id="map-wrapper">
+    <div class="zoom-controls">
+      <button class="zoom-btn" onclick="adjustZoom(0.35)" title="Zoom In">+</button>
+      <button class="zoom-btn" onclick="adjustZoom(-0.35)" title="Zoom Out">−</button>
+      <button class="zoom-btn" onclick="resetZoom()" title="Reset">↺</button>
+    </div>
+
+<svg id="tamriel-svg" viewBox="0 0 800 560">
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(212,175,55,0.06)" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="800" height="560" fill="url(#grid)"/>
+
+  <g id="viewport">
+    <g transform="translate(735, 65)" opacity="0.75">
+      <circle r="24" fill="none" stroke="#d4af37" stroke-width="1"/>
+      <polygon points="0,-22 5,-5 22,0 5,5 0,22 -5,5 -22,0 -5,-5" fill="#d4af37"/>
+      <text x="0" y="-27" fill="#d4af37" font-size="10" font-weight="bold" text-anchor="middle">N</text>
+    </g>
+
+    <!-- HIGH ROCK -->
+    <path class="province" fill="#4a6b82" d="M 115,130 L 145,105 L 185,95 L 225,88 L 245,112 L 220,138 L 195,148 L 185,175 L 160,178 L 148,155 L 122,165 L 105,152 Z" onclick="showLore('highrock')"/>
+
+    <!-- HAMMERFELL -->
+    <path class="province" fill="#9e6b43" d="M 145,182 L 192,178 L 222,142 L 265,155 L 288,188 L 272,235 L 235,252 L 195,248 L 162,262 L 142,238 L 152,208 Z" onclick="showLore('hammerfell')"/>
+    <circle class="province" fill="#9e6b43" cx="152" cy="274" r="6" onclick="showLore('hammerfell')"/>
+
+    <!-- SKYRIM -->
+    <path class="province" fill="#526a7a" d="M 228,88 L 285,72 L 355,68 L 425,78 L 455,115 L 442,168 L 395,182 L 335,178 L 288,185 L 265,152 L 225,136 Z" onclick="showLore('skyrim')"/>
+    <path class="province" fill="#637b8c" d="M 468,54 L 486,50 L 494,68 L 482,82 L 465,74 Z" onclick="showLore('skyrim')"/>
+
+    <!-- MORROWIND -->
+    <path class="province" fill="#6e4b5e" d="M 456,112 L 515,96 L 575,118 L 605,165 L 592,225 L 555,258 L 512,252 L 492,215 L 465,188 L 444,166 Z" onclick="showLore('morrowind')"/>
+    <path class="province" fill="#82566d" d="M 505,122 L 542,115 L 562,142 L 552,172 L 505,165 Z" onclick="showLore('morrowind')"/>
+  </g>
+</svg>
+  </div>
+</section>
+
+<div class="realm-bar">
+    <button class="realm-btn" onclick="showLore('atmora')">Atmora (North)</button>
+    <button class="realm-btn" onclick="showLore('akavir')">Akavir (East)</button>
+    <button class="realm-btn" onclick="showLore('yokuda')">Yokuda (West)</button>
+    <button class="realm-btn" onclick="showLore('pyandonea')">Pyandonea (South)</button>
+    <button class="realm-btn" onclick="showLore('oblivion')">Oblivion &amp; Aetherius</button>
+  </div>
+
+  <div class="lore-card" id="lore-card">
+    <h2 id="lore-title">Tamriel: The Starry Heart</h2>
+    <div class="lore-meta" id="lore-meta">Continent of Nirn • 9 Imperial Provinces</div>
+    <p id="lore-desc">Tap any province on the map above—or select one of the outer continents and planes of existence—to inspect its geography, native peoples, capital cities, and major historical eras.</p>
+  </div>
+</section>
+
+<section id="era-sec" class="section">
+  <div class="timeline-item">
+    <span class="era-badge">Dawn Era</span>
+    <h3>Creation of Mundus &amp; Convention</h3>
+    <p>Lorkhan convinces the Aedra to create the mortal plane. Magnus flees to Aetherius, tearing the sun and stars into the sky, while the Adamantine Tower anchors linear time.</p>
+  </div>
+  <div class="timeline-item">
+    <span class="era-badge">Merethic Era</span>
+    <h3>Aldmeri Settlement &amp; Return of Ysgramor</h3>
+    <p>Elves migrate from Aldmeris to Summerset and mainland Tamriel. Atmorans led by Ysgramor settle Skyrim, sparking the Dragon War and the fall of the Snow Elves.</p>
+  </div>
+  <div class="timeline-item">
+    <span class="era-badge">First Era (1E 0 – 1E 2920)</span>
+    <h3>Alessian Empire &amp; Disappearance of the Dwemer</h3>
+    <p>Saint Alessia overthrows the Ayleids in Cyrodiil. In 1E 700, the Battle of Red Mountain results in the sudden vanishing of the entire Dwemer race and the rise of the Tribunal.</p>
+  </div>
+  <div class="timeline-item">
+    <span class="era-badge">Second Era (2E 0 – 2E 896)</span>
+    <h3>The Interregnum &amp; Tiber Septim's Conquests</h3>
+    <p>Following the fall of the Akaviri Potentate, Tamriel fractures into the Three Banners War. Centuries later, Tiber Septim uses the Numidium to unite all of Tamriel under the Third Empire.</p>
+  </div>
+  <div class="timeline-item">
+    <span class="era-badge">Third Era (3E 0 – 3E 433)</span>
+    <h3>The Septim Dynasty &amp; The Oblivion Crisis</h3>
+    <p>433 years of Imperial rule marked by the Imperial Simulacrum, the Warp in the West, the awakening of Dagoth Ur, and Mehrunes Dagon's invasion—ended by Martin Septim's sacrifice.</p>
+  </div>
+  <div class="timeline-item">
+    <span class="era-badge">Fourth Era (4E 0 – Present)</span>
+    <h3>The Red Year, The Great War &amp; Return of Alduin</h3>
+    <p>Vvardenfell is devastated by Red Mountain's eruption. The Aldmeri Dominion forces the White-Gold Concordat upon the Empire, while Alduin returns to Skyrim in 4E 201.</p>
+  </div>
+</section>
+
+<section id="game-sec" class="section">
+  <p class="hint">Chronological order of Elder Scrolls games across Tamriel's timeline</p>
+
+  <div class="game-item">
+    <span class="era-badge">2E 582 • Second Era</span>
+    <h3>The Elder Scrolls Online</h3>
+    <p>Set during the Interregnum and Planemeld, as Molag Bal attempts to merge Nirn with Coldharbour amid the Three Banners War.</p>
+  </div>
+  <div class="game-item">
+    <span class="era-badge">2E 864 • Second Era</span>
+    <h3>The Elder Scrolls Adventures: Redguard</h3>
+    <p>Follows Cyrus on the island of Stros M'Kai during Tiber Septim's conquest of Hammerfell.</p>
+  </div>
+  <div class="game-item">
+    <span class="era-badge">3E 389 – 3E 399 • Third Era</span>
+    <h3>The Elder Scrolls: Arena</h3>
+    <p>The Eternal Champion travels across every province of Tamriel to reassemble the Staff of Chaos and free Emperor Uriel Septim VII from Jagar Tharn.</p>
+  </div>
+</section>
+
+</body>
+</html>
