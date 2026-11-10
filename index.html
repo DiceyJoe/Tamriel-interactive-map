@@ -79,130 +79,80 @@
       </div>
       <svg id="map" viewBox="0 0 800 560">
         <defs>
-          <radialGradient id="oceanGrad" cx="50%" cy="48%" r="62%">
-            <stop offset="0%" stop-color="#284254"/>
-            <stop offset="60%" stop-color="#162733"/>
-            <stop offset="100%" stop-color="#0b141c"/>
+          <radialGradient id="oceanGrad" cx="50%" cy="48%" r="60%">
+            <stop offset="0%" stop-color="#263c4d"/>
+            <stop offset="65%" stop-color="#172733"/>
+            <stop offset="100%" stop-color="#0d171f"/>
           </radialGradient>
-          <linearGradient id="grad-skyrim" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stop-color="#8a9ba6"/><stop offset="55%" stop-color="#687a85"/><stop offset="100%" stop-color="#4e5d66"/>
-          </linearGradient>
-          <radialGradient id="grad-morrowind" cx="45%" cy="40%" r="65%">
-            <stop offset="0%" stop-color="#8f5d66"/><stop offset="60%" stop-color="#704952"/><stop offset="100%" stop-color="#4f333a"/>
-          </radialGradient>
-          <linearGradient id="grad-hammerfell" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#ba8852"/><stop offset="65%" stop-color="#9c6c3b"/><stop offset="100%" stop-color="#7d532a"/>
-          </linearGradient>
-          <radialGradient id="grad-cyrodiil" cx="50%" cy="50%" r="60%">
-            <stop offset="0%" stop-color="#6c8a56"/><stop offset="70%" stop-color="#536b41"/><stop offset="100%" stop-color="#3f5231"/>
-          </radialGradient>
-          <linearGradient id="grad-blackmarsh" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#456b54"/><stop offset="100%" stop-color="#2c4737"/>
-          </linearGradient>
-          <linearGradient id="grad-valenwood" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stop-color="#4e7d40"/><stop offset="100%" stop-color="#325428"/>
-          </linearGradient>
-          <linearGradient id="grad-elsweyr" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stop-color="#bd9653"/><stop offset="100%" stop-color="#8c6d37"/>
-          </linearGradient>
-          <linearGradient id="grad-highrock" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#698574"/><stop offset="100%" stop-color="#495e52"/>
-          </linearGradient>
-          <linearGradient id="grad-summerset" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#b39c52"/><stop offset="100%" stop-color="#806d35"/>
-          </linearGradient>
-          <filter id="terrainTexture" x="-5%" y="-5%" width="110%" height="110%">
-            <feTurbulence type="fractalNoise" baseFrequency="0.065" numOctaves="4" seed="8" result="grain"/>
-            <feDiffuseLighting in="grain" lighting-color="#fff4db" surfaceScale="1.35" result="relief">
-              <feDistantLight azimuth="45" elevation="58"/>
-            </feDiffuseLighting>
-            <feBlend mode="multiply" in="SourceGraphic" in2="relief" result="textured"/>
-            <feDropShadow dx="0" dy="3.5" stdDeviation="4.5" flood-color="#04080a" flood-opacity="0.85"/>
-          </filter>
-          <filter id="coastalShelf" x="-10%" y="-10%" width="120%" height="120%">
-            <feMorphology operator="dilate" radius="4.5" in="SourceAlpha" result="shelf"/>
-            <feGaussianBlur stdDeviation="3.5" in="shelf" result="blurredShelf"/>
-            <feFlood flood-color="#4b7b96" flood-opacity="0.35" result="shelfColor"/>
-            <feComposite in="shelfColor" in2="blurredShelf" operator="in"/>
-          </filter>
-          <filter id="oceanTexture" x="0%" y="0%" width="100%" height="100%">
-            <feTurbulence type="fractalNoise" baseFrequency="0.025" numOctaves="3" seed="3" result="waterNoise"/>
-            <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.08 0" in="waterNoise" result="faintWater"/>
-            <feComposite in="faintWater" in2="SourceGraphic" operator="over"/>
+          <filter id="landShadow" x="-10%" y="-10%" width="120%" height="120%">
+            <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#05080a" flood-opacity="0.8"/>
           </filter>
         </defs>
-
         <g id="vp">
-          <rect x="-250" y="-250" width="1300" height="1060" fill="url(#oceanGrad)"/>
-          <rect x="-250" y="-250" width="1300" height="1060" fill="#89b8d4" filter="url(#oceanTexture)" pointer-events="none"/>
-
-          <g stroke="rgba(212,175,55,0.11)" stroke-width="0.7" pointer-events="none">
-            <line x1="-100" y1="140" x2="900" y2="140"/><line x1="-100" y1="280" x2="900" y2="280"/><line x1="-100" y1="420" x2="900" y2="420"/>
-            <line x1="200" y1="-100" x2="200" y2="660"/><line x1="400" y1="-100" x2="400" y2="660"/><line x1="600" y1="-100" x2="600" y2="660"/>
+          <rect x="-200" y="-200" width="1200" height="960" fill="url(#oceanGrad)"/>
+          <g stroke="rgba(212,175,55,0.12)" stroke-width="0.8" pointer-events="none">
+            <line x1="0" y1="140" x2="800" y2="140"/><line x1="0" y1="280" x2="800" y2="280"/><line x1="0" y1="420" x2="800" y2="420"/>
+            <line x1="200" y1="0" x2="200" y2="560"/><line x1="400" y1="0" x2="400" y2="560"/><line x1="600" y1="0" x2="600" y2="560"/>
           </g>
-
-          <g transform="translate(725,68)" opacity="0.88" pointer-events="none">
-            <circle r="27" fill="none" stroke="#d4af37" stroke-width="1"/>
-            <circle r="22" fill="none" stroke="#d4af37" stroke-dasharray="2,2"/>
-            <polygon points="0,-24 4.5,-4.5 24,0 4.5,4.5 0,24 -4.5,4.5 -24,0 -4.5,-4.5" fill="#d4af37"/>
-            <text x="0" y="-29" fill="#d4af37" font-size="10" font-family="Georgia,serif" font-weight="bold" text-anchor="middle">N</text>
+          <g transform="translate(725,68)" opacity="0.85" pointer-events="none">
+            <circle r="26" fill="none" stroke="#d4af37" stroke-width="1"/>
+            <circle r="21" fill="none" stroke="#d4af37" stroke-dasharray="2,2"/>
+            <polygon points="0,-24 5,-5 24,0 5,5 0,24 -5,5 -24,0 -5,-5" fill="#d4af37"/>
+            <text x="0" y="-28" fill="#d4af37" font-size="10" font-family="Georgia,serif" font-weight="bold" text-anchor="middle">N</text>
           </g>
-
-          <text x="360" y="34" class="sea">SEA OF GHOSTS</text>
-          <text x="78" y="295" class="sea">ABECEAN SEA</text>
-          <text x="458" y="446" class="sea">TOPAL BAY</text>
-          <text x="672" y="280" class="sea">PADOMAIC OCEAN</text>
-
-          <g filter="url(#coastalShelf)" pointer-events="none">
-            <path d="M 96,154 L 136,112 L 198,86 L 244,112 L 195,148 L 158,155 L 122,168 Z"/>
-            <path d="M 142,184 L 222,142 L 288,188 L 235,252 L 174,268 L 142,238 Z"/>
-            <path d="M 228,88 L 352,65 L 455,115 L 442,168 L 335,178 L 265,152 Z"/>
-            <path d="M 456,112 L 578,116 L 606,165 L 555,258 L 492,215 L 444,166 Z"/>
-            <path d="M 288,186 L 443,169 L 490,220 L 434,312 L 315,280 L 274,238 Z"/>
-            <path d="M 491,218 L 556,259 L 585,315 L 565,385 L 495,380 L 472,330 Z"/>
-            <path d="M 365,306 L 468,290 L 462,388 L 395,395 L 360,355 Z"/>
-            <path d="M 272,265 L 364,307 L 342,415 L 275,405 L 252,340 Z"/>
-            <path d="M 105,365 L 168,348 L 192,438 L 130,455 L 94,415 Z"/>
+          <text x="360" y="36" class="sea">SEA OF GHOSTS</text>
+          <text x="82" y="295" class="sea">ABECEAN SEA</text>
+          <text x="455" y="445" class="sea">TOPAL BAY</text>
+          <text x="665" y="280" class="sea">PADOMAIC OCEAN</text>
+          <g filter="url(#landShadow)">
+            <path class="prov" data-lore="highrock" fill="#5b7365" d="M 108,136 L 132,110 L 168,94 L 218,86 L 244,112 L 222,138 L 195,148 L 185,175 L 158,178 L 146,154 L 122,166 L 102,152 Z"/>
+            <path class="prov" data-lore="hammerfell" fill="#a87948" d="M 145,182 L 192,178 L 222,142 L 265,155 L 288,188 L 272,235 L 235,252 L 195,248 L 162,262 L 142,238 L 152,208 Z"/>
+            <circle class="prov" data-lore="hammerfell" fill="#a87948" cx="152" cy="274" r="7"/>
+            <path class="prov" data-lore="skyrim" fill="#6b7c85" d="M 228,88 L 285,72 L 355,66 L 425,76 L 455,115 L 442,168 L 395,182 L 335,178 L 288,185 L 265,152 L 225,136 Z"/>
+            <path class="prov" data-lore="skyrim" fill="#7a8c96" d="M 468,52 L 488,48 L 496,68 L 482,82 L 465,74 Z"/>
+            <path class="prov" data-lore="morrowind" fill="#78535c" d="M 456,112 L 515,96 L 575,118 L 605,165 L 592,225 L 555,258 L 512,252 L 492,215 L 465,188 L 444,166 Z"/>
+            <path class="prov" data-lore="morrowind" fill="#8c606a" d="M 504,120 L 544,114 L 564,142 L 552,174 L 504,165 Z"/>
+            <path class="prov" data-lore="cyrodiil" fill="#5e784c" d="M 288,186 L 335,179 L 395,183 L 443,169 L 465,190 L 490,220 L 478,285 L 425,310 L 365,305 L 315,280 L 274,238 Z"/>
+            <path class="prov" data-lore="blackmarsh" fill="#3f614d" d="M 491,218 L 512,253 L 556,259 L 585,315 L 565,385 L 495,380 L 472,330 L 479,286 Z"/>
+            <path class="prov" data-lore="elsweyr" fill="#b38e4e" d="M 365,306 L 425,311 L 468,290 L 462,388 L 395,395 L 360,355 Z"/>
+            <path class="prov" data-lore="valenwood" fill="#436e38" d="M 272,265 L 315,281 L 364,307 L 359,360 L 342,415 L 275,405 L 252,340 Z"/>
+            <path class="prov" data-lore="summerset" fill="#9c8744" d="M 105,365 L 175,350 L 195,435 L 130,455 L 95,415 Z"/>
+            <path class="prov" data-lore="summerset" fill="#9c8744" d="M 192,345 L 222,340 L 228,385 L 198,390 Z"/>
           </g>
-
-          <g filter="url(#terrainTexture)">
-            <!-- HIGH ROCK -->
-            <path class="prov" data-lore="highrock" fill="url(#grad-highrock)" d="M 96,154 L 106,143 L 114,132 L 128,125 L 136,112 L 151,105 L 164,95 L 182,94 L 198,86 L 218,86 L 231,98 L 244,112 L 232,126 L 222,138 L 206,142 L 195,148 L 192,163 L 184,173 L 171,164 L 158,155 L 146,154 L 134,162 L 122,168 L 110,162 Z"/>
-            <path class="prov" data-lore="highrock" fill="url(#grad-highrock)" d="M 164,168 L 171,166 L 173,174 L 166,176 Z"/>
-
-            <!-- HAMMERFELL -->
-            <path class="prov" data-lore="hammerfell" fill="url(#grad-hammerfell)" d="M 142,184 L 160,179 L 178,181 L 194,176 L 208,158 L 222,142 L 244,148 L 265,155 L 276,172 L 288,188 L 281,212 L 272,235 L 254,244 L 235,252 L 215,248 L 195,248 L 182,256 L 174,268 L 162,262 L 152,250 L 142,238 L 148,222 L 152,208 L 140,196 Z"/>
-            <path class="prov" data-lore="hammerfell" fill="url(#grad-hammerfell)" d="M 146,271 L 155,269 L 159,276 L 150,279 Z"/>
-
-            <!-- SKYRIM -->
-            <path class="prov" data-lore="skyrim" fill="url(#grad-skyrim)" d="M 228,88 L 256,82 L 274,73 L 292,76 L 308,68 L 328,72 L 352,65 L 376,72 L 398,69 L 425,76 L 440,95 L 455,115 L 448,142 L 442,168 L 418,176 L 395,182 L 365,179 L 335,178 L 312,182 L 288,185 L 276,168 L 265,152 L 245,144 L 225,136 L 236,114 Z"/>
-            <path class="prov" data-lore="skyrim" fill="url(#grad-skyrim)" d="M 467,54 L 478,47 L 489,49 L 495,60 L 494,71 L 483,82 L 471,78 L 464,68 Z"/>
-
-            <!-- MORROWIND & VVARDENFELL -->
-            <path class="prov" data-lore="morrowind" fill="url(#grad-morrowind)" d="M 456,112 L 475,98 L 492,108 L 496,132 L 492,162 L 508,182 L 538,185 L 566,174 L 574,145 L 565,118 L 578,116 L 594,138 L 606,165 L 602,196 L 592,225 L 574,244 L 555,258 L 534,256 L 512,252 L 502,234 L 492,215 L 478,202 L 465,188 L 454,176 L 444,166 L 450,138 Z"/>
-            <path class="prov" data-lore="morrowind" fill="url(#grad-morrowind)" d="M 505,122 L 524,114 L 544,115 L 558,128 L 564,144 L 558,162 L 548,174 L 528,172 L 508,165 L 501,146 Z"/>
-
-            <!-- CYRODIIL -->
-            <path class="prov" data-lore="cyrodiil" fill="url(#grad-cyrodiil)" d="M 288,186 L 312,183 L 335,179 L 365,180 L 395,183 L 420,176 L 443,169 L 455,180 L 465,190 L 478,205 L 490,220 L 484,252 L 478,285 L 454,298 L 434,312 L 418,308 L 392,306 L 365,305 L 340,292 L 315,280 L 294,260 L 274,238 L 281,212 Z"/>
-
-            <!-- BLACK MARSH -->
-            <path class="prov" data-lore="blackmarsh" fill="url(#grad-blackmarsh)" d="M 491,218 L 512,253 L 534,257 L 556,259 L 572,286 L 585,315 L 576,348 L 565,385 L 538,376 L 518,386 L 495,380 L 482,356 L 472,330 L 476,308 L 479,286 L 485,252 Z"/>
-
-            <!-- ELSWEYR -->
-            <path class="prov" data-lore="elsweyr" fill="url(#grad-elsweyr)" d="M 365,306 L 395,307 L 425,311 L 448,300 L 468,290 L 466,338 L 462,388 L 428,392 L 395,395 L 376,376 L 360,355 L 362,330 Z"/>
-
-            <!-- VALENWOOD -->
-            <path class="prov" data-lore="valenwood" fill="url(#grad-valenwood)" d="M 272,265 L 294,273 L 315,281 L 340,294 L 364,307 L 361,334 L 359,360 L 351,388 L 342,415 L 308,412 L 275,405 L 262,372 L 252,340 L 262,302 Z"/>
-
-            <!-- SUMMERSET ISLES -->
-            <path class="prov" data-lore="summerset" fill="url(#grad-summerset)" d="M 105,365 L 138,354 L 168,348 L 182,368 L 176,392 L 194,415 L 192,438 L 162,448 L 130,455 L 112,436 L 94,415 L 102,390 Z"/>
-            <path class="prov" data-lore="summerset" fill="url(#grad-summerset)" d="M 192,345 L 212,338 L 224,352 L 228,378 L 214,392 L 198,388 L 196,366 Z"/>
-            <circle class="prov" data-lore="summerset" fill="url(#grad-summerset)" cx="236" cy="402" r="4.5"/>
-          </g>
-
-          <!-- Rivers & Mountain Ranges -->
           <g pointer-events="none">
-
+            <path d="M 382,222 L 396,250 L 418,278 L 434,310 M 272,118 L 315,112 L 348,96 M 408,108 L 415,142" fill="none" stroke="#2d6a8a" stroke-width="2" stroke-linecap="round"/>
+            <ellipse cx="382" cy="222" rx="7" ry="5" fill="#2d6a8a"/>
+            <path d="M 285,175 L 295,162 L 305,175 M 312,173 L 322,160 L 332,173 M 342,172 L 352,159 L 362,172 M 374,173 L 384,160 L 394,173 M 404,174 L 414,161 L 424,174 M 442,124 L 451,111 L 460,124 M 445,148 L 454,135 L 463,148 M 235,145 L 244,133 L 253,145 M 340,140 L 352,122 L 364,140" fill="none" stroke="#e6dec8" stroke-opacity="0.65" stroke-width="1.5" stroke-linecap="round"/>
+          </g>
+          <polygon class="prov" data-lore="redmountain" points="532,128 522,148 542,148" fill="#b84a39" stroke="#ff9e7d" stroke-width="1.2"/>
+          <text x="532" y="157" class="city" style="fill:#ffc2ad">Red Mountain</text>
+          <text x="168" y="130" class="lbl">HIGH ROCK</text>
+          <text x="215" y="210" class="lbl">HAMMERFELL</text>
+          <text x="350" y="114" class="lbl">SKYRIM</text>
+          <text x="532" y="196" class="lbl">MORROWIND</text>
+          <text x="385" y="254" class="lbl">CYRODIIL</text>
+          <text x="528" y="325" class="lbl">BLACK MARSH</text>
+          <text x="415" y="355" class="lbl">ELSWEYR</text>
+          <text x="310" y="355" class="lbl">VALENWOOD</text>
+          <text x="148" y="405" class="lbl">SUMMERSET</text>
+          <g pointer-events="none">
+            <circle cx="382" cy="222" r="3.2" fill="#d4af37" stroke="#000"/><text x="382" y="213" class="city" style="font-weight:700">Imperial City</text>
+            <circle cx="294" cy="248" r="2.2" fill="#d4af37"/><text x="294" y="242" class="city">Anvil</text>
+            <circle cx="445" cy="205" r="2.2" fill="#d4af37"/><text x="445" y="199" class="city">Cheydinhal</text>
+            <circle cx="288" cy="84" r="2.5" fill="#d4af37"/><text x="288" y="77" class="city">Solitude</text>
+            <circle cx="348" cy="134" r="2.3" fill="#d4af37"/><text x="348" y="146" class="city">Whiterun</text>
+            <circle cx="412" cy="104" r="2.2" fill="#d4af37"/><text x="412" y="98" class="city">Windhelm</text>
+            <circle cx="122" cy="148" r="2.5" fill="#d4af37"/><text x="122" y="142" class="city">Daggerfall</text>
+            <circle cx="182" cy="156" r="2.2" fill="#d4af37"/><text x="182" y="166" class="city">Wayrest</text>
+            <circle cx="176" cy="242" r="2.5" fill="#d4af37"/><text x="176" y="236" class="city">Sentinel</text>
+            <circle cx="520" cy="228" r="2.5" fill="#d4af37"/><text x="520" y="222" class="city">Mournhold</text>
+            <circle cx="534" cy="170" r="2.2" fill="#d4af37"/><text x="534" y="180" class="city">Vivec</text>
+            <circle cx="525" cy="355" r="2.5" fill="#d4af37"/><text x="525" y="349" class="city">Lilmoth</text>
+            <circle cx="410" cy="378" r="2.5" fill="#d4af37"/><text x="410" y="372" class="city">Torval</text>
+            <circle cx="305" cy="382" r="2.5" fill="#d4af37"/><text x="305" y="376" class="city">Elden Root</text>
+            <circle cx="132" cy="418" r="2.5" fill="#d4af37"/><text x="132" y="412" class="city">Alinor</text>
+          </g>
+        </g>
       </svg>
     </div>
     <div class="bar">
